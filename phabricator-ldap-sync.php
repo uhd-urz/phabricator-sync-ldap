@@ -2,15 +2,16 @@
 <?php
 
 assert_options(ASSERT_BAIL, 1);
+define("ROOT", dirname(__FILE__));
+define("BASENAME", basename(__FILE__, ".php"));
 
 // LOAD PHABRICATOR
 
-define("ROOT", dirname(__FILE__));
-require_once ROOT . "/scripts/__init_script__.php";
+define("PHABRICATOR_ROOT", ROOT . "/../phabricator");
+require_once PHABRICATOR_ROOT  . "/scripts/__init_script__.php";
 
 // LOAD UTILITY FUNCTIONS
 
-define("BASENAME", basename(__FILE__, ".php"));
 require_once ROOT . "/" . BASENAME . ".inc.php";
 
 // LOAD CONFIG
