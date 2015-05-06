@@ -1,5 +1,8 @@
 <?php
 
+// Enable (debug) output
+define("DEBUG", true);
+
 // Instructions what to do, currently ignored:
 define("DRY_RUN", true);
 define("CREATE_USERS", false);

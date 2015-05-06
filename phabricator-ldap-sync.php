@@ -48,7 +48,7 @@ $ldap_bindpw = getenv('LDAP_BINDPW');
 assert($ldap_bindpw !== false);
 
 if (DRY_RUN) {
-	print(">>> DRY RUN <<<\n");
+	debug(">>> DRY RUN <<<\n");
 }
 
 // LDAP

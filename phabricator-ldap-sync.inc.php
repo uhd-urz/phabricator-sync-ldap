@@ -1,5 +1,11 @@
 <?php
 
+function debug($str) {
+	if (DEBUG) {
+		print($str);
+	}
+}
+
 // LDAP
 
 function create_ldap_connection($uri, $binddn, $bindpw) {
@@ -135,7 +141,7 @@ function update_phab_users($user_map, $ldap_users, $ld, $phab) {
 	$phab_admin = $phab["admin"];
 	$ldap_user_name_attr = $ld["user"]["name_attr"];
 
-	print("Will create users:\n");
+	debug("Will create users:\n");
 	$userdn_userphid_map = $user_map["by_dn"];
 	foreach ($userdn_userphid_map as $userdn => $userphid) {
 		if ($userphid == null) {
@@ -144,12 +150,12 @@ function update_phab_users($user_map, $ldap_users, $ld, $phab) {
 			$usernames = $user[$ldap_user_name_attr];
 			assert($usernames["count"] == 1);
 			$username = $usernames[0];
-			print("  " . $username . " (" . $userdn . ")\n");
+			debug("  " . $username . " (" . $userdn . ")\n");
 			// TODO: Actually create user
 		}
 	}
 
-	print("Will disable users:\n");
+	debug("Will disable users:\n");
 	$userphid_userdn_map = $user_map["by_phid"];
 	foreach ($userphid_userdn_map as $userphid => $userdn) {
 		// FIXME: AD users can expire or be disabled, thus we also need to check LDAP attributes "accountExpires" and "userAccountControl"
@@ -164,7 +170,7 @@ function update_phab_users($user_map, $ldap_users, $ld, $phab) {
 				->withPHIDs(array($userphid))
 				->executeOne();
 			$username = $user->getUserName();
-			print("  " . $username . " (" . $userphid . ")\n");
+			debug("  " . $username . " (" . $userphid . ")\n");
 			// TODO: Actually deactivate user
 		}
 	}
@@ -174,7 +180,7 @@ function update_phab_projects($project_map, $ldap_users, $ld, $phab) {
 	$phab_admin = $phab["admin"];
 	$ldap_group_name_attr = $ld["group"]["name_attr"];
 
-	print("Will create projects:\n");
+	debug("Will create projects:\n");
 	$groupdn_projectphid_map = $project_map["by_dn"];
 	foreach ($groupdn_projectphid_map as $groupdn => $projectphid) {
 		if ($projectphid == null) {
@@ -183,12 +189,12 @@ function update_phab_projects($project_map, $ldap_users, $ld, $phab) {
 			$groupnames = $group[$ldap_group_name_attr];
 			assert($groupnames["count"] == 1);
 			$groupname = $groupnames[0];
-			print("  " . $groupname . " (" . $groupdn . ")\n");
+			debug("  " . $groupname . " (" . $groupdn . ")\n");
 			// TODO: Actually create project
 		}
 	}
 
-	print("Will disable projects:\n");
+	debug("Will disable projects:\n");
 	$projectphid_groupdn_map = $project_map["by_phid"];
 	foreach ($projectphid_groupdn_map as $projectphid => $groupdn) {
 		// Luckily AD groups cannot expire or be disabled, so we do not need to check anything but their existence
@@ -199,7 +205,7 @@ function update_phab_projects($project_map, $ldap_users, $ld, $phab) {
 				->withPHIDs(array($projectphid))
 				->executeOne();
 			$projectname = $project->getName();
-			print("  " . $projectname . " (" . $projectphid . ")\n");
+			debug("  " . $projectname . " (" . $projectphid . ")\n");
 			// TODO: Actually disable project
 		}
 	}
@@ -236,23 +242,23 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 		$member_spec['+'] = array_fuse(array_diff($group_member_phids, $project_member_phids));
 		$member_spec['-'] = array_fuse(array_diff($project_member_phids, $group_member_phids));
 
-		print("Will add members to project '" . $projectname . "':\n");
+		debug("Will add members to project '" . $projectname . "':\n");
 		foreach ($member_spec['+'] as $memberphid) {
 			$user = id(new PhabricatorPeopleQuery())
 				->setViewer($phab_admin)
                         	->withPHIDs(array($memberphid))
                         	->executeOne();
 			$username = $user->getUserName();
-			print("  " . $username . " (" . $memberphid . ")\n");
+			debug("  " . $username . " (" . $memberphid . ")\n");
 		}
-		print("Will remove members from project '" . $projectname . "':\n");
+		debug("Will remove members from project '" . $projectname . "':\n");
 		foreach ($member_spec['-'] as $memberphid) {
 			$user = id(new PhabricatorPeopleQuery())
 				->setViewer($phab_admin)
                         	->withPHIDs(array($memberphid))
                         	->executeOne();
 			$username = $user->getUserName();
-			print("  " . $username . " (" . $memberphid . ")\n");
+			debug("  " . $username . " (" . $memberphid . ")\n");
 		}
 
 		$type_member = PhabricatorProjectProjectHasMemberEdgeType::EDGECONST;
