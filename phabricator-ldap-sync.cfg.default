@@ -4,7 +4,7 @@
 define("DEBUG", true);
 
 // Instructions what to do, currently ignored:
-define("DRY_RUN", true);
+define("DRY_RUN", false);
 define("CREATE_USERS", false);
 define("CREATE_PROJECTS", false);
 define("ADD_PROJECT_MEMBERS", true);
