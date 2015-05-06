@@ -273,19 +273,19 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 		$projectname = $project->getName();
 		$project_member_phids = $project->getMemberPHIDs();
 
-		$member_spec = array('+' => array(), '-' => array());
+		$members_diff = array('+' => array(), '-' => array());
 
 		if (ADD_PROJECT_MEMBERS) {
-			$member_spec['+'] = array_fuse(array_diff($group_member_phids, $project_member_phids));
+			$members_diff['+'] = array_fuse(array_diff($group_member_phids, $project_member_phids));
 		}
 
 		if (REMOVE_PROJECT_MEMBERS) {
-			$member_spec['-'] = array_fuse(array_diff($project_member_phids, $group_member_phids));
+			$members_diff['-'] = array_fuse(array_diff($project_member_phids, $group_member_phids));
 		}
 
-		if (DEBUG && !empty($member_spec['+'])) {
+		if (DEBUG && !empty($members_diff['+'])) {
 			debug("Will add members to project '" . $projectname . "':\n");
-			foreach ($member_spec['+'] as $memberphid) {
+			foreach ($members_diff['+'] as $memberphid) {
 				$user = id(new PhabricatorPeopleQuery())
 					->setViewer($phab_admin)
 					->withPHIDs(array($memberphid))
@@ -295,9 +295,9 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 			}
 		}
 
-		if (DEBUG && !empty($member_spec['-'])) {
+		if (DEBUG && !empty($members_diff['-'])) {
 			debug("Will remove members from project '" . $projectname . "':\n");
-			foreach ($member_spec['-'] as $memberphid) {
+			foreach ($members_diff['-'] as $memberphid) {
 				$user = id(new PhabricatorPeopleQuery())
 					->setViewer($phab_admin)
 					->withPHIDs(array($memberphid))
@@ -313,7 +313,7 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 		$xactions[] = id(new PhabricatorProjectTransaction())
 			->setTransactionType(PhabricatorTransactions::TYPE_EDGE)
 			->setMetadataValue('edge:type', $type_member)
-			->setNewValue($member_spec);
+			->setNewValue($members_diff);
 
 		$editor = id(new PhabricatorProjectTransactionEditor($project))
 			->setActor($phab_admin)
