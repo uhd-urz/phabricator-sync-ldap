@@ -145,11 +145,24 @@ function update_phab_users($user_map, $ldap_users, $ld, $phab) {
 
 	if (CREATE_USERS) {
 		$userdn_userphid_map = $user_map["by_dn"];
-		foreach ($userdn_userphid_map as $userdn => $userphid) {
-			if ($userphid == null) {
-				$users_diff['+'][$userdn] = $userphid;
-			}
-		}
+		$users_diff['+'] = array_filter($userdn_userphid_map, function($userphid) {
+			/* Add users which are currently missing in Phabricator */
+			return ($userphid == null);
+		});
+	}
+
+	if (DELETE_USERS) {
+		$userphid_userdn_map = $user_map["by_phid"];
+		$users_diff['-'] = array_filter($userphid_userdn_map, function($userdn) {
+			/* Delete users which are currently missing in LDAP */
+			// FIXME: AD users can expire or be disabled, thus we also need to check LDAP attributes "accountExpires" and "userAccountControl"
+			// For the latter this would be interpreting userAccountControl as a bitmask (LDAP bitwise AND rule 1.2.840.113556.1.4.803) and checking the bits with e.g.: (userAccountControl:1.2.840.113556.1.4.803:=2)
+			// Bits according to KB305144: 0x2: disabled, 0x16: lockout, 0x800000: password expired
+			// See-Also: http://blogs.technet.com/b/heyscriptingguy/archive/2005/05/12/how-can-i-get-a-list-of-all-the-disabled-user-accounts-in-active-directory.aspx
+			// See-Also: http://blogs.technet.com/b/mempson/archive/2011/08/24/useraccountcontrol-flags.aspx
+			// See-Also: https://support.microsoft.com/en-us/kb/305144
+			return ($userdn == null);
+		});
 	}
 
 	if (DEBUG && !empty($users_diff['+'])) {
@@ -165,21 +178,6 @@ function update_phab_users($user_map, $ldap_users, $ld, $phab) {
 	}
 
 	// TODO: Actually create user
-
-	if (DELETE_USERS) {
-		$userphid_userdn_map = $user_map["by_phid"];
-		foreach ($userphid_userdn_map as $userphid => $userdn) {
-			// FIXME: AD users can expire or be disabled, thus we also need to check LDAP attributes "accountExpires" and "userAccountControl"
-			// For the latter this would be interpreting userAccountControl as a bitmask (LDAP bitwise AND rule 1.2.840.113556.1.4.803) and checking the bits with e.g.: (userAccountControl:1.2.840.113556.1.4.803:=2)
-			// Bits according to KB305144: 0x2: disabled, 0x16: lockout, 0x800000: password expired
-			// See-Also: http://blogs.technet.com/b/heyscriptingguy/archive/2005/05/12/how-can-i-get-a-list-of-all-the-disabled-user-accounts-in-active-directory.aspx
-			// See-Also: http://blogs.technet.com/b/mempson/archive/2011/08/24/useraccountcontrol-flags.aspx
-			// See-Also: https://support.microsoft.com/en-us/kb/305144
-			if ($userdn == null) {
-				$users_diff['-'][$userphid] = $userdn;
-			}
-		}
-	}
 
 	if (DEBUG && !empty($users_diff['-'])) {
 		debug("Will disable users:\n");
@@ -204,11 +202,19 @@ function update_phab_projects($project_map, $ldap_users, $ld, $phab) {
 
 	if (CREATE_PROJECTS) {
 		$groupdn_projectphid_map = $project_map["by_dn"];
-		foreach ($groupdn_projectphid_map as $groupdn => $projectphid) {
-			if ($projectphid == null) {
-				$projects_diff['+'][$groupdn] = $projectphid;
-			}
-		}
+		$projects_diff['+'] = array_filter($groupdn_projectphid_map, function($projectphid) {
+			/* Add projects which are currently missing in Phabricator */
+			return ($projectphid == null);
+		});
+	}
+
+	if (DELETE_PROJECTS) {
+		$projectphid_groupdn_map = $project_map["by_phid"];
+		$projects_diff['-'] = array_filter($projectphid_groupdn_map, function($groupdn) {
+			// Luckily AD groups cannot expire or be disabled, so we do not need to check anything but their existence
+			// FIXME: Do not disable those projects, which have no LDAP DN CustomField set! Only those where the referenced LDAP object does not exist!
+			return ($groupdn == null);
+		});
 	}
 
 	if (DEBUG && !empty($projects_diff['+'])) {
@@ -224,17 +230,6 @@ function update_phab_projects($project_map, $ldap_users, $ld, $phab) {
 	}
 
 	// TODO: Actually create project
-
-	if (DELETE_PROJECTS) {
-		$projectphid_groupdn_map = $project_map["by_phid"];
-		foreach ($projectphid_groupdn_map as $projectphid => $groupdn) {
-			// Luckily AD groups cannot expire or be disabled, so we do not need to check anything but their existence
-			// FIXME: Do not disable those projects, which have no LDAP DN CustomField set! Only those where the referenced LDAP object does not exist!
-			if ($groupdn == null) {
-				$projects_diff['-'][$projectphid] = $groupdn;
-			}
-		}
-	}
 
 	if (DEBUG && !empty($projects_diff['-'])) {
 		debug("Will disable projects:\n");
@@ -278,9 +273,15 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 		$projectname = $project->getName();
 		$project_member_phids = $project->getMemberPHIDs();
 
-		$member_spec = array();
-		$member_spec['+'] = ADD_PROJECT_MEMBERS ? array_fuse(array_diff($group_member_phids, $project_member_phids)) : array();
-		$member_spec['-'] = REMOVE_PROJECT_MEMBERS ? array_fuse(array_diff($project_member_phids, $group_member_phids)) : array();
+		$member_spec = array('+' => array(), '-' => array());
+
+		if (ADD_PROJECT_MEMBERS) {
+			$member_spec['+'] = array_fuse(array_diff($group_member_phids, $project_member_phids));
+		}
+
+		if (REMOVE_PROJECT_MEMBERS) {
+			$member_spec['-'] = array_fuse(array_diff($project_member_phids, $group_member_phids));
+		}
 
 		if (DEBUG && !empty($member_spec['+'])) {
 			debug("Will add members to project '" . $projectname . "':\n");
