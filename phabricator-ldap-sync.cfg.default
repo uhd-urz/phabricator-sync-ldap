@@ -1,0 +1,32 @@
+<?php
+
+// Instructions what to do, currently ignored:
+define("DRY_RUN", true);
+define("CREATE_USERS", false);
+define("CREATE_PROJECTS", false);
+define("ADD_PROJECT_MEMBERS", true);
+define("REMOVE_PROJECT_MEMBERS", false);
+
+// Adapt this according to your LDAP setup:
+define("LDAP_BASE", "dc=example,dc=com");
+define("LDAP_USER_SUBTREE", "ou=users");
+define("LDAP_GROUP_SUBTREE", "ou=groups");
+
+// These are the Active Directory defaults:
+define("LDAP_USER_FILTER", "objectClass=user");
+define("LDAP_USER_NAME_ATTR", "name");
+define("LDAP_USER_MAIL_ATTR", "mail");
+define("LDAP_USER_GROUP_ATTR", "memberOf");
+define("LDAP_USER_GROUP_TRGT", "dn");
+
+// These are the Active Directory defaults:
+define("LDAP_GROUP_FILTER", "objectClass=group");
+define("LDAP_GROUP_NAME_ATTR", "cn");
+define("LDAP_GROUP_MEMBER_ATTR", "member");
+define("LDAP_GROUP_MEMBER_TRGT", "dn");
+
+// Adapt this according to your Phabricator setup:
+define("PHAB_ADMIN_USERNAME", "AdministratorUsername");
+define("PHAB_PROJECT_LDAP_DN_FIELD", "std:project:mycustomfield:ldap:dn");
+define("PHAB_USER_LDAP_DN_FIELD", "std:user:mycustomfield:ldap:dn");
+define("PHAB_USER_ACCOUNT_TYPE", "AccountType");
