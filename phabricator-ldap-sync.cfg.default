@@ -9,7 +9,7 @@ define("CREATE_USERS", false);
 define("DELETE_USERS", false);
 define("CREATE_PROJECTS", false);
 define("DELETE_PROJECTS", false);
-define("ADD_PROJECT_MEMBERS", true);
+define("ADD_PROJECT_MEMBERS", false);
 define("REMOVE_PROJECT_MEMBERS", false);
 
 // Adapt this according to your LDAP setup:
