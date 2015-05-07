@@ -177,7 +177,9 @@ function update_phab_users($user_map, $ldap_users, $ld, $phab) {
 		}
 	}
 
-	// TODO: Actually create user
+	if (!DRY_RUN) {
+		// TODO: Actually create user
+	}
 
 	if (DEBUG && !empty($users_diff['-'])) {
 		debug("Will disable users:\n");
@@ -191,7 +193,9 @@ function update_phab_users($user_map, $ldap_users, $ld, $phab) {
 		}
 	}
 
-	// TODO: Actually deactivate user
+	if (!DRY_RUN) {
+		// TODO: Actually deactivate user
+	}
 }
 
 function update_phab_projects($project_map, $ldap_users, $ld, $phab) {
@@ -229,7 +233,9 @@ function update_phab_projects($project_map, $ldap_users, $ld, $phab) {
 		}
 	}
 
-	// TODO: Actually create project
+	if (!DRY_RUN) {
+		// TODO: Actually create project
+	}
 
 	if (DEBUG && !empty($projects_diff['-'])) {
 		debug("Will disable projects:\n");
@@ -243,7 +249,9 @@ function update_phab_projects($project_map, $ldap_users, $ld, $phab) {
 		}
 	}
 
-	// TODO: Actually disable project
+	if (!DRY_RUN) {
+		// TODO: Actually disable project
+	}
 }
 
 function update_phab_project_members($project_map, $user_map, $phab_projects, $ldap_groups, $ld, $phab) {
@@ -307,19 +315,21 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 			}
 		}
 
-		$type_member = PhabricatorProjectProjectHasMemberEdgeType::EDGECONST;
+		if (!DRY_RUN) {
+			$type_member = PhabricatorProjectProjectHasMemberEdgeType::EDGECONST;
 
-		$xactions = array();
-		$xactions[] = id(new PhabricatorProjectTransaction())
-			->setTransactionType(PhabricatorTransactions::TYPE_EDGE)
-			->setMetadataValue('edge:type', $type_member)
-			->setNewValue($members_diff);
+			$xactions = array();
+			$xactions[] = id(new PhabricatorProjectTransaction())
+				->setTransactionType(PhabricatorTransactions::TYPE_EDGE)
+				->setMetadataValue('edge:type', $type_member)
+				->setNewValue($members_diff);
 
-		$editor = id(new PhabricatorProjectTransactionEditor($project))
-			->setActor($phab_admin)
-			->setContentSource(PhabricatorContentSource::newConsoleSource())
-			->setContinueOnNoEffect(true)
-			->setContinueOnMissingFields(true)
-			->applyTransactions($project, $xactions);
+			$editor = id(new PhabricatorProjectTransactionEditor($project))
+				->setActor($phab_admin)
+				->setContentSource(PhabricatorContentSource::newConsoleSource())
+				->setContinueOnNoEffect(true)
+				->setContinueOnMissingFields(true)
+				->applyTransactions($project, $xactions);
+		}
 	}
 }
