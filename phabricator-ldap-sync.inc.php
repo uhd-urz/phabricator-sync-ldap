@@ -1,10 +1,24 @@
 <?php
 
+$mail_str = "";
+
 function debug($str) {
+	global $mail_str;
+
 	if (DEBUG) {
 		print($str);
+		$mail_str .= $str;
 	}
 }
+
+function send_report() {
+	global $mail_str;
+
+	if (!empty($mail_str) && !empty(DEBUG_EMAIL)) {
+		mail(DEBUG_EMAIL, "Phabricator LDAP synchronisation report", $mail_str);
+	}
+}
+register_shutdown_function("send_report");
 
 // LDAP
 
