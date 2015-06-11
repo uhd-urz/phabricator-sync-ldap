@@ -139,9 +139,6 @@ function map_projects($phab_projects, $phab) {
 		if ($ldap_dn) {
 			$ldap_dn = strtolower($ldap_dn);
 			$groupdn_projectphid_map[$ldap_dn] = $phab_projectphid;
-		}
-
-		if ($ldap_dn) {
 			$projectphid_groupdn_map[$phab_projectphid] = $ldap_dn;
 		}
 	}
