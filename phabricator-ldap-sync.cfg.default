@@ -6,7 +6,7 @@ define("DEBUG", true);
 // Send an email with all debug output to this address (specify the empty string to disable)
 define("DEBUG_EMAIL", "mail@example.com");
 
-// Instructions what to do, currently ignored:
+// Instructions what to do:
 define("DRY_RUN", false);
 define("CREATE_USERS", false);
 define("DELETE_USERS", false);
