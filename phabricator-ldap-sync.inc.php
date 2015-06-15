@@ -94,6 +94,51 @@ function getField($object, $field_key, $user) {
 		->getFieldValue();
 }
 
+function modifyProjectMembers($project, $members_diff, $viewer) {
+	$projectname = $project->getName();
+
+	if (DEBUG && !empty($members_diff['+'])) {
+		debug("Will add members to project '" . $projectname . "':\n");
+		foreach ($members_diff['+'] as $memberphid) {
+			$user = id(new PhabricatorPeopleQuery())
+				->setViewer($viewer)
+				->withPHIDs(array($memberphid))
+				->executeOne();
+			$username = $user->getUserName();
+			debug("  " . $username . " (" . $memberphid . ")\n");
+		}
+	}
+
+	if (DEBUG && !empty($members_diff['-'])) {
+		debug("Will remove members from project '" . $projectname . "':\n");
+		foreach ($members_diff['-'] as $memberphid) {
+			$user = id(new PhabricatorPeopleQuery())
+				->setViewer($viewer)
+				->withPHIDs(array($memberphid))
+				->executeOne();
+			$username = $user->getUserName();
+			debug("  " . $username . " (" . $memberphid . ")\n");
+		}
+	}
+
+	if (!DRY_RUN) {
+		$type_member = PhabricatorProjectProjectHasMemberEdgeType::EDGECONST;
+
+		$xactions = array();
+		$xactions[] = id(new PhabricatorProjectTransaction())
+			->setTransactionType(PhabricatorTransactions::TYPE_EDGE)
+			->setMetadataValue('edge:type', $type_member)
+			->setNewValue($members_diff);
+
+		$editor = id(new PhabricatorProjectTransactionEditor())
+			->setActor($viewer)
+			->setContentSource(PhabricatorContentSource::newConsoleSource())
+			->setContinueOnNoEffect(true)
+			->setContinueOnMissingFields(true)
+			->applyTransactions($project, $xactions);
+	}
+}
+
 // MAPS
 
 // FIXME: We need a change in semantics:
@@ -290,7 +335,6 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 		}
 
 		$project = $phab_projects[$projectphid]; // This is safe, because we map from Phab to LDAP and not the other way round
-		$projectname = $project->getName();
 		$project_member_phids = $project->getMemberPHIDs();
 
 		$members_diff = array('+' => array(), '-' => array());
@@ -303,45 +347,6 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 			$members_diff['-'] = array_fuse(array_diff($project_member_phids, $group_member_phids));
 		}
 
-		if (DEBUG && !empty($members_diff['+'])) {
-			debug("Will add members to project '" . $projectname . "':\n");
-			foreach ($members_diff['+'] as $memberphid) {
-				$user = id(new PhabricatorPeopleQuery())
-					->setViewer($phab_admin)
-					->withPHIDs(array($memberphid))
-					->executeOne();
-				$username = $user->getUserName();
-				debug("  " . $username . " (" . $memberphid . ")\n");
-			}
-		}
-
-		if (DEBUG && !empty($members_diff['-'])) {
-			debug("Will remove members from project '" . $projectname . "':\n");
-			foreach ($members_diff['-'] as $memberphid) {
-				$user = id(new PhabricatorPeopleQuery())
-					->setViewer($phab_admin)
-					->withPHIDs(array($memberphid))
-					->executeOne();
-				$username = $user->getUserName();
-				debug("  " . $username . " (" . $memberphid . ")\n");
-			}
-		}
-
-		if (!DRY_RUN) {
-			$type_member = PhabricatorProjectProjectHasMemberEdgeType::EDGECONST;
-
-			$xactions = array();
-			$xactions[] = id(new PhabricatorProjectTransaction())
-				->setTransactionType(PhabricatorTransactions::TYPE_EDGE)
-				->setMetadataValue('edge:type', $type_member)
-				->setNewValue($members_diff);
-
-			$editor = id(new PhabricatorProjectTransactionEditor($project))
-				->setActor($phab_admin)
-				->setContentSource(PhabricatorContentSource::newConsoleSource())
-				->setContinueOnNoEffect(true)
-				->setContinueOnMissingFields(true)
-				->applyTransactions($project, $xactions);
-		}
+		modifyProjectMembers($project, $members_diff, $phab_admin);
 	}
 }
