@@ -14,8 +14,8 @@ function debug($str) {
 function send_report() {
 	global $mail_str;
 
-	if (!empty($mail_str) && !empty(DEBUG_EMAIL)) {
-		mail(DEBUG_EMAIL, "Phabricator LDAP synchronisation report", $mail_str);
+	if (!empty($mail_str) && !empty(DEBUG_MAILTO)) {
+		mail(DEBUG_MAILTO, "Phabricator LDAP synchronisation report", $mail_str, "From: " . DEBUG_MAILFROM . "\r\n");
 	}
 }
 register_shutdown_function("send_report");
