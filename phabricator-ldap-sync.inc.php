@@ -83,7 +83,8 @@ function query_ldap_user_by_username($ld, $username) {
 // PHABRICATOR
 
 function getField($object, $field_key, $user) {
-	$fields = PhabricatorCustomField::getObjectFields($object, PhabricatorCustomField::ROLE_DEFAULT)
+	$role = PhabricatorCustomField::ROLE_APPLICATIONTRANSACTIONS;
+	$fields = PhabricatorCustomField::getObjectFields($object, $role)
 		->setViewer($user)
 		->readFieldsFromStorage($object)
 		->getFields();
