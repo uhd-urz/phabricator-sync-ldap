@@ -313,6 +313,7 @@ function update_phab_projects($project_map, $ldap_users, $ld, $phab) {
 
 function update_phab_project_members($project_map, $user_map, $phab_projects, $ldap_groups, $ld, $phab) {
 	$phab_admin = $phab["admin"];
+	$phab_protected_users = $phab["protected_users"];
 	$ldap_group_member_attr = $ld["group"]["member_attr"];
 
 	$userdn_userphid_map = $user_map["by_dn"];
@@ -345,6 +346,21 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 
 		if (REMOVE_PROJECT_MEMBERS) {
 			$members_diff['-'] = array_fuse(array_diff($project_member_phids, $group_member_phids));
+		}
+
+		// Prevent modification of "protected" users
+		foreach (array('+', '-') as $action) {
+			foreach ($members_diff[$action] as $userphid) {
+				$user = id(new PhabricatorPeopleQuery())
+					->setViewer($phab_admin)
+					->withPHIDs(array($userphid))
+					->executeOne();
+				$username = $user->getUsername();
+
+				if (in_array($username, $phab_protected_users)) {
+					unset($members_diff[$action][$userphid]);
+				}
+			}
 		}
 
 		modifyProjectMembers($project, $members_diff, $phab_admin);

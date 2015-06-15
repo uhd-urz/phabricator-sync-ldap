@@ -38,6 +38,9 @@ assert(PHAB_PROJECT_LDAP_DN_FIELD !== null);
 assert(PHAB_USER_LDAP_DN_FIELD !== null);
 assert(PHAB_USER_ACCOUNT_TYPE !== null);
 
+// With PHP7 this variable can be changed to a constant
+assert($PHAB_PROTECTED_USERS !== null);
+
 // LOAD CONNECTION INFO FROM ENVIRONMENT
 
 $ldap_uri = getenv('LDAP_URI');
@@ -88,6 +91,8 @@ $phab = array(
 	"project_ldap_dn_field" => PHAB_PROJECT_LDAP_DN_FIELD,
 	"user_ldap_dn_field" => PHAB_USER_LDAP_DN_FIELD,
 	"user_account_type" => PHAB_USER_ACCOUNT_TYPE,
+	// With PHP7 this variable can be changed to a constant
+	"protected_users" => $PHAB_PROTECTED_USERS,
 );
 
 $phab_projects = id(new PhabricatorProjectQuery())

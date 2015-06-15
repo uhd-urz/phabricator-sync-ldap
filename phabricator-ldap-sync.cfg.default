@@ -39,3 +39,7 @@ define("PHAB_ADMIN_USERNAME", "AdministratorUsername");
 define("PHAB_PROJECT_LDAP_DN_FIELD", "std:project:mycustomfield:ldap:dn");
 define("PHAB_USER_LDAP_DN_FIELD", "std:user:mycustomfield:ldap:dn");
 define("PHAB_USER_ACCOUNT_TYPE", "AccountType");
+
+// User to protect from any automatic changes:
+$PHAB_PROTECTED_USERS = array("my-username");
+// Needs PHP7: define("PHAB_PROTECTED_USERS", array("my-username"));
