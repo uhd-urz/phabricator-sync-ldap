@@ -14,7 +14,9 @@ function debug($str) {
 function send_report() {
 	global $mail_str;
 
-	if (!empty($mail_str) && !empty(DEBUG_MAILTO)) {
+	if (!empty($mail_str) && defined("DEBUG_MAILTO") && defined("DEBUG_MAILFROM")) {
+		assert(!empty(DEBUG_MAILTO));
+		assert(!empty(DEBUG_MAILFROM));
 		mail(DEBUG_MAILTO, "Phabricator LDAP synchronisation report", $mail_str, "From: " . DEBUG_MAILFROM . "\r\n");
 	}
 }
@@ -330,6 +332,7 @@ function update_phab_project_members($project_map, $user_map, $phab_projects, $l
 		foreach ($group_members as $userdn) {
 			$userdn = strtolower($userdn);
 			$userphid = idx($userdn_userphid_map, $userdn);
+
 			if ($userphid) {
 				$group_member_phids[] = $userphid;
 			}
