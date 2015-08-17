@@ -96,13 +96,13 @@ $phab = array(
 );
 
 $phab_projects = id(new PhabricatorProjectQuery())
-		->setViewer($phab_admin)
+		->setViewer(PhabricatorUser::getOmnipotentUser())
 		->needMembers(true)
 		->execute();
 $phab_projects = mpull($phab_projects, null, "getPHID");
 
 $phab_accounts = id(new PhabricatorExternalAccountQuery())
-		->setViewer($phab_admin)
+		->setViewer(PhabricatorUser::getOmnipotentUser())
 		->withAccountTypes(array(PHAB_USER_ACCOUNT_TYPE))
 		->execute();
 // FIXME: Useful at least for creating debug output! Should be provided to the update_* functions!
@@ -116,7 +116,7 @@ update_phab_users($user_map, $ldap_users, $ld, $phab);
 update_phab_projects($project_map, $ldap_groups, $ld, $phab);
 
 $phab_projects = id(new PhabricatorProjectQuery())
-		->setViewer($phab_admin)
+		->setViewer(PhabricatorUser::getOmnipotentUser())
 		->needMembers(true)
 		->execute();
 $phab_projects = mpull($phab_projects, null, "getPHID");
