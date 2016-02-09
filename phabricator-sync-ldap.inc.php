@@ -99,6 +99,10 @@ function getField($object, $field_key, $user) {
 function modifyProjectMembers($project, $members_diff, $viewer) {
 	$projectname = $project->getName();
 
+	if (empty($members_diff['+']) && empty($members_diff['-'])) {
+		return;
+	}
+
 	if (DEBUG && !empty($members_diff['+'])) {
 		debug("Will add members to project '" . $projectname . "':\n");
 		foreach ($members_diff['+'] as $memberphid) {
