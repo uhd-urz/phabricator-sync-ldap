@@ -4,7 +4,7 @@
 define("DEBUG", true);
 
 // Send an email with all debug output to this address (specify the empty string to disable)
-define("DEBUG_MAILTO", "mail@example.com");
+define("DEBUG_MAILTO", "admin@example.com");
 define("DEBUG_MAILFROM", "cron@example.com");
 
 // Instructions what to do:
