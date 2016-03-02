@@ -18,7 +18,7 @@ You do keep backups, don't you?
 
 ### CustomField
 
-To mark projects to be synced, we [add a CustomField](https://secure.phabricator.com/book/phabricator/article/custom_fields/) to those projects, naming the LDAP DN of the group to sync with:
+To mark projects to be synced, we [add a CustomField](https://secure.phabricator.com/book/phabricator/article/custom_fields/) to `projects.custom-field-definitions`, which will name the LDAP DN of the group to sync with:
 
 ```json
 {
@@ -36,7 +36,7 @@ To mark projects to be synced, we [add a CustomField](https://secure.phabricator
 
 Change the `my-org` prefix to something related to your organisation, so as to prevent name clashes with other extensions!
 
-After you added this CustomField, you should populate it for the projects you want to sync.
+After you added this CustomField, you should populate it for the projects you want to sync. You can do that from the Phabricator web-interface by editing the projects.
 
 ### Adjust config template
 
@@ -50,8 +50,10 @@ Adjust the config to your needs and setup:
 
 * Debugging:
   - `DEBUG`: Be verbose on stdout?
-  - `DEBUG_MAILTO`: Where to send a copy of everything that was printed to stdout? This may be unset, which results in no mail being sent.
-  - `DEBUG_MAILFROM`: Which e-mail address to use in `From:` when sending emails? This may be unset, which results in no mail being sent.
+  - `DEBUG_MAILTO`: Where to send a copy of everything that was printed to stdout?
+    - This may be unset, which will result in no mail being sent.
+  - `DEBUG_MAILFROM`: Which e-mail address to use in `From:` when sending emails?
+    - This may be unset, which will result in no mail being sent.
 * Actions:
   - `DRY_RUN`: Only print what would be done, but don't actually do it.
   - `CREATE_USERS` (not implemented): Shall users be created from those found in LDAP?
@@ -66,21 +68,33 @@ Adjust the config to your needs and setup:
   - `LDAP_GROUP_SUBTREE`: In which subtree (relative to base DN) are groups stored?
 * User:
   - `LDAP_USER_FILTER`: How to find LDAP user objects?
+    - On AD it might be `objectClass=user`, while on OpenLDAP it could be `objectClass=posixAccount`.
   - `LDAP_USER_NAME_ATTR`: Which attribute represents the display name in your LDAP setup?
+    - On AD this is usually `name`, while on OpenLDAP it is often `cn`.
   - `LDAP_USER_MAIL_ATTR` (unused): Which attribute contains the e-mail address of this user?
-  - `LDAP_USER_GROUP_ATTR` (unused): Which attribute points to this user's LDAP group?
-  - `LDAP_USER_GROUP_TRGT` (unused): What is the target attribute of the group attribute referenced by `GROUP_ATTR`? E.g. if `memberOf` holds the LDAP group DN, this should be `dn`. If it contained the common name, it would be `cn`.
+    - This is usually `mail` on all systems.
+  - `LDAP_USER_GROUP_ATTR` (unused): Which attribute contains this user's LDAP groups?
+    - On AD this is usually `memberOf` and points to a group DN. OpenLDAP usually does not provide a mapping in this direction.
+  - `LDAP_USER_GROUP_TRGT` (unused): What is the target attribute of the group attribute referenced by `GROUP_ATTR`?
+    - On AD, `memberOf` contains the LDAP group DN, thus this should be the `dn` attribute (of the group).
 * Group:
   - `LDAP_GROUP_FILTER`: How to find LDAP group objects?
+    - On AD it might be `objectClass=group`, while on OpenLDAP it could be `objectClass=posixGroup`.
   - `LDAP_GROUP_NAME_ATTR`: Which attribute represents the display name in your LDAP setup?
-  - `LDAP_GROUP_MEMBER_ATTR`: Which attribute points to this group's members?
+    - On AD and OpenLDAP this is usually `cn`.
+  - `LDAP_GROUP_MEMBER_ATTR`: Which attribute contains this group's members?
+    - On AD this is usually `member` and points to a user DN. On OpenLDAP this is usually `memberUid` and contains the username.
   - `LDAP_GROUP_MEMBER_TRGT` (unused): What is the target attribute of the member attribute referenced by `MEMBER_ATTR`?
+    - On AD, `memberOf` contains the LDAP user DN, thus this should be the `dn` attribute (of the user). On OpenLDAP, this would be the `uid` attribute (of the user).
 * Phabricator:
   - `PHAB_ADMIN_USERNAME`: The administrator user to impersonate.
-  - `PHAB_PROJECT_LDAP_DN_FIELD`: What is the fully qualified name of the CustomField you created in step (1)? Be aware that the name you defined in step (1) is additionally prefixed with `std:project:`!
+  - `PHAB_PROJECT_LDAP_DN_FIELD`: What is the fully qualified name of the CustomField you created in step (1)?
+    - Be aware that the name you defined is additionally prefixed with `std:project:`!
   - `PHAB_USER_LDAP_DN_FIELD` (unused): What is the fully qualified name of the CustomField used to detect users managed by LDAP?
-  - `PHAB_USER_ACCOUNT_TYPE`: What is the AccountType of the users you want to manage? For the built-in LDAP support this is `ldap`, for users managed by [the RemoteUser Phabricator extension](https://github.com/uhd-urz/phabricator-extensions-remoteuser) this is `RemoteUser`. Have a look at `getAdapterType()` in `libphutil/src/auth/Phutil*AuthAdapter.php` for other possible values.
-  - `PHAB_PROTECTED_USERS`: Which usernames shall the script never touch? E.g. put the names of your admins here.
+  - `PHAB_USER_ACCOUNT_TYPE`: What is the AccountType of the users you want to manage?
+    - For the built-in LDAP support this is `ldap`, while for users managed by [the RemoteUser Phabricator extension](https://github.com/uhd-urz/phabricator-extensions-remoteuser) this is `RemoteUser`. Have a look at `getAdapterType()` in `libphutil/src/auth/Phutil*AuthAdapter.php` for other possible values.
+  - `PHAB_PROTECTED_USERS`: Which usernames shall the script never touch?
+    - E.g. put the names of your admins here.
 
 ### Run
 
