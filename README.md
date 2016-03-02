@@ -1,19 +1,24 @@
 # Phabricator Sync LDAP
 
-This script syncs LDAP groups with Phabricator projects. The Phabricator projects need to be specifically marked and only those that are marked will be synced with the specified LDAP group. The Phabricator users need to be of a specific AccountType -- all others will not be touched by the script.
+This script syncs LDAP groups with Phabricator projects.
+
+The Phabricator projects need to be specifically marked and only those that are marked will be synced with the specified LDAP group. The Phabricator users need to be of a specific AccountType -- all others will not be touched by the script.
 
 Once [T3980](https://secure.phabricator.com/T3980) is implemented, there is no need for this duct tape anymore.
 
+## Warning!
 
+While the script takes great care to not destroy anything and just work on specifically defined subsets of the Phabricator users and projects, and it should adhere to the restrictions placed upon the configured administrative user, there may still be bugs, either in Phabricator or this script.
 
-# Warning!
+Thus it is highly recommended to first try this script on a development instance of Phabricator and only afterwards use it in production.
 
-This script will do DB writes/changes (creating projects, users, and modifying projects).
-I highly recommend making a dev instance of phabricator and playing with that, instead of production.
+You do keep backups, don't you?
 
-# Setup
+## Setup
 
-1. To mark projects to be synced, we [add a CustomField](https://secure.phabricator.com/book/phabricator/article/custom_fields/) to those projects, naming the LDAP DN of the group to sync with:
+### CustomField
+
+To mark projects to be synced, we [add a CustomField](https://secure.phabricator.com/book/phabricator/article/custom_fields/) to those projects, naming the LDAP DN of the group to sync with:
 
 ```json
 {
@@ -31,15 +36,17 @@ I highly recommend making a dev instance of phabricator and playing with that, i
 
 Change the `my-org` prefix to something related to your organisation, so as to prevent name clashes with other extensions!
 
-2. After you added this CustomField, you should populate it for the projects you want to sync.
+After you added this CustomField, you should populate it for the projects you want to sync.
 
-3. Next, copy the config template to its actual location:
+### Adjust config template
+
+Next, copy the config template to its actual location:
 
 ```sh
 cp phabricator-sync-ldap.cfg.default phabricator-sync-ldap.cfg
 ```
 
-4. Adjust the config to your needs and setup:
+Adjust the config to your needs and setup:
 
 * Debugging:
   - `DEBUG`: Be verbose on stdout?
@@ -75,14 +82,22 @@ cp phabricator-sync-ldap.cfg.default phabricator-sync-ldap.cfg
   - `PHAB_USER_ACCOUNT_TYPE`: What is the AccountType of the users you want to manage? For the built-in LDAP support this is `ldap`, for users managed by [the RemoteUser Phabricator extension](https://github.com/uhd-urz/phabricator-extensions-remoteuser) this is `RemoteUser`. Have a look at `getAdapterType()` in `libphutil/src/auth/Phutil*AuthAdapter.php` for other possible values.
   - `PHAB_PROTECTED_USERS`: Which usernames shall the script never touch? E.g. put the names of your admins here.
 
-5. Define environment variables for the LDAP connection method and run the script:
+### Run
+
+Define environment variables corresponding to the LDAP connection and run the script:
 
 ```sh
-env LDAP_URI="ldap://ldap.example.com/" LDAP_BINDDN="cn=binduser,ou=ldapusers,..." LDAP_BINDPW="..." ./phabricator-sync-ldap.php
+env \
+	LDAP_URI="ldap://ldap.example.com/" \
+	LDAP_BINDDN="cn=binduser,ou=ldapusers,..." \
+	LDAP_BINDPW="..." \
+	./phabricator-sync-ldap.php
 ```
 
 For security reasons, `LDAP_URI`, `LDAP_BINDDN` and `LDAP_BINDPW` are not stored in the config file, as that is stored in the script directory and might easily be world readable.
 
 If you do not set `LDAP_BINDDN` and `LDAP_BINDPW`, an anonymous bind will be attempted.
 
-6. Set up a cron-job.
+### Cron
+
+Finally, you could set up a cron-job.
