@@ -46,15 +46,20 @@ assert($PHAB_PROTECTED_USERS !== null);
 $ldap_uri = getenv('LDAP_URI');
 assert($ldap_uri !== false);
 $ldap_binddn = getenv('LDAP_BINDDN');
-assert($ldap_binddn !== false);
 $ldap_bindpw = getenv('LDAP_BINDPW');
-assert($ldap_bindpw !== false);
+assert(($ldap_binddn === false && $ldap_bindpw !== false) || ($ldap_binddn !== false && $ldap_bindpw !== false));
 
 if (DRY_RUN) {
 	debug(">>> DRY RUN <<<\n");
 }
 
 // LDAP
+
+if ($ldap_binddn === false && $ldap_bindpw === false) {
+	debug("Attempting anonymous bind ...\n");
+	$ldap_binddn = NULL;
+	$ldap_bindpw = NULL;
+}
 
 $ld = array(
 	"connection" => create_ldap_connection($ldap_uri, $ldap_binddn, $ldap_bindpw),

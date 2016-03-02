@@ -83,4 +83,6 @@ env LDAP_URI="ldap://ldap.example.com/" LDAP_BINDDN="cn=binduser,ou=ldapusers,..
 
 For security reasons, `LDAP_URI`, `LDAP_BINDDN` and `LDAP_BINDPW` are not stored in the config file, as that is stored in the script directory and might easily be world readable.
 
+If you do not set `LDAP_BINDDN` and `LDAP_BINDPW`, an anonymous bind will be attempted.
+
 6. Set up a cron-job.
