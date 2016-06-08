@@ -22,6 +22,11 @@ function send_report() {
 }
 register_shutdown_function("send_report");
 
+function newCronContentSource() {
+  return PhabricatorContentSource::newForSource(
+    PhabricatorCronContentSource::SOURCECONST);
+}
+
 // LDAP
 
 function create_ldap_connection($uri, $binddn, $bindpw) {
@@ -138,7 +143,7 @@ function modifyProjectMembers($project, $members_diff, $viewer) {
 
 		$editor = id(new PhabricatorProjectTransactionEditor())
 			->setActor($viewer)
-			->setContentSource(PhabricatorContentSource::newConsoleSource())
+			->setContentSource(newCronContentSource())
 			->setContinueOnNoEffect(true)
 			->setContinueOnMissingFields(true)
 			->applyTransactions($project, $xactions);
